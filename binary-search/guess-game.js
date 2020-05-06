@@ -1,29 +1,56 @@
 import promptLib from 'prompt-sync'
+const prompt = promptLib()
 
-const program = (min, max, guessCount = 1) => {
-    const nextGuess = min + Math.floor((max-min)/2)
+const getHalfOfRange = (min, max) =>
+    min + Math.floor((max-min)/2)
 
-    const isGuessRight = (prompt(`Is it ${nextGuess}? (y/n)  `).toLowerCase() === 'y')
+const formatPlayerAnswer = playersAnswer =>
+    playersAnswer.toLowerCase()
 
-    if (isGuessRight) {
-        console.log(`Great! Just ${guessCount} attempts!`)
-        return
-    }
+const getPlayersGuessConfirmation = nextGuess =>
+    prompt(`Is it ${nextGuess}? (y/n)  `)
 
-    const tip = prompt(`Is it higher or lower than ${nextGuess}? (h/l)  `).toLowerCase()
-    switch (tip) {
-        case 'h':
-            program(nextGuess, max, ++guessCount)
-            break;
-        case 'l':
-            program(min, nextGuess, ++guessCount)
-            break;
-        default:
-            console.log('Wrong Option')
-            break;
-    }
+const isPositive = playersAnswer =>
+    formatPlayerAnswer(playersAnswer) === 'y'
+
+const isGuessRight = nextGuess =>
+    isPositive(getPlayersGuessConfirmation(nextGuess))
+
+const getPlayersTip = nextGuess =>
+    prompt(`Is it higher or lower than ${nextGuess}? (h/l)  `)
+
+const isGuessHigherOrLower = nextGuess =>
+    formatPlayerAnswer(getPlayersTip(nextGuess))
+
+const itIsHigher = higherOrLower =>
+    higherOrLower === 'h'
+
+const gessAHigherNumber = (nextGuess, {max, guessCount}) =>
+    guess({ min: nextGuess, max, guessCount: ++guessCount })
+
+const gessALowerNumber = (nextGuess, {min, guessCount}) =>
+    guess({ min, max: nextGuess, guessCount: ++guessCount })
+
+const itIsLower = higherOrLower =>
+    higherOrLower === 'l'
+
+const guessWithTip = (nextGuess, higherOrLower, lastGuessData) => {
+    if (itIsHigher(higherOrLower))
+        return gessAHigherNumber(nextGuess, lastGuessData)
+    if (itIsLower(higherOrLower))
+        return gessALowerNumber(nextGuess, lastGuessData)
+
+    return false
 }
 
-const prompt = promptLib()
+const guess = ({ min, max, guessCount = 1 }) => {
+    const nextGuess = getHalfOfRange(min, max)
+    if (!isGuessRight(nextGuess))
+        return guessWithTip(nextGuess, isGuessHigherOrLower(nextGuess), { min, max, guessCount })
+
+    console.log(`Great! Just ${guessCount} attempts!`)
+    return true
+}
+
 console.log('\nGuess a number 0 - 100\n\n')
-program(0, 100)
+guess({ min: 0, max: 100})
