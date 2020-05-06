@@ -1,56 +1,48 @@
-import promptLib from 'prompt-sync'
-const prompt = promptLib()
+const getHalfOfRange = range =>
+    range[Math.floor(range.length / 2)]
 
-const getHalfOfRange = (min, max) =>
-    min + Math.floor((max-min)/2)
+const getHigherRange = (actualRange, nextGuess) =>
+    [...actualRange].slice(actualRange.indexOf(nextGuess), actualRange.length)
 
-const formatPlayerAnswer = playersAnswer =>
-    playersAnswer.toLowerCase()
+const getLowerRange = (actualRange, nextGuess) =>
+    [...actualRange].slice(0, actualRange.indexOf(nextGuess) + 1)
 
-const getPlayersGuessConfirmation = nextGuess =>
-    prompt(`Is it ${nextGuess}? (y/n)  `)
+const gessAHigherNumber = (nextGuess, lastGuessData, deps) =>
+    guess({
+        ...lastGuessData,
+        range: getHigherRange(lastGuessData.range, nextGuess),
+        guessCount: ++lastGuessData.guessCount
+    }, deps)
 
-const isPositive = playersAnswer =>
-    formatPlayerAnswer(playersAnswer) === 'y'
-
-const isGuessRight = nextGuess =>
-    isPositive(getPlayersGuessConfirmation(nextGuess))
-
-const getPlayersTip = nextGuess =>
-    prompt(`Is it higher or lower than ${nextGuess}? (h/l)  `)
-
-const isGuessHigherOrLower = nextGuess =>
-    formatPlayerAnswer(getPlayersTip(nextGuess))
+const gessALowerNumber = (nextGuess, lastGuessData, deps) =>
+    guess({
+        ...lastGuessData,
+        range: getLowerRange(lastGuessData.range, nextGuess),
+        guessCount: ++lastGuessData.guessCount
+    }, deps)
 
 const itIsHigher = higherOrLower =>
     higherOrLower === 'h'
 
-const gessAHigherNumber = (nextGuess, {max, guessCount}) =>
-    guess({ min: nextGuess, max, guessCount: ++guessCount })
-
-const gessALowerNumber = (nextGuess, {min, guessCount}) =>
-    guess({ min, max: nextGuess, guessCount: ++guessCount })
-
 const itIsLower = higherOrLower =>
     higherOrLower === 'l'
 
-const guessWithTip = (nextGuess, higherOrLower, lastGuessData) => {
+const guessWithTip = (nextGuess, higherOrLower, lastGuessData, deps) => {
     if (itIsHigher(higherOrLower))
-        return gessAHigherNumber(nextGuess, lastGuessData)
+        return gessAHigherNumber(nextGuess, lastGuessData, deps)
     if (itIsLower(higherOrLower))
-        return gessALowerNumber(nextGuess, lastGuessData)
+        return gessALowerNumber(nextGuess, lastGuessData, deps)
 
     return false
 }
 
-const guess = ({ min, max, guessCount = 1 }) => {
-    const nextGuess = getHalfOfRange(min, max)
-    if (!isGuessRight(nextGuess))
-        return guessWithTip(nextGuess, isGuessHigherOrLower(nextGuess), { min, max, guessCount })
+const guess = (guessData, deps) => {
+    const nextGuess = getHalfOfRange(guessData.range)
+    if (!deps.isGuessRight(nextGuess, guessData.choice))
+        return guessWithTip(nextGuess, deps.isGuessHigherOrLower(nextGuess, guessData.choice), guessData, deps)
 
-    console.log(`Great! Just ${guessCount} attempts!`)
+    console.log(`Great! Just ${guessData.guessCount} attempt(s)!`)
     return true
 }
 
-console.log('\nGuess a number 0 - 100\n\n')
-guess({ min: 0, max: 100})
+export default guess
