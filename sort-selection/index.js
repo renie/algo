@@ -1,4 +1,8 @@
 import promptLib from 'prompt-sync'
+import sortFunc from './sort-selection.js'
+import sortLoop from './sort-selection-loop.js'
+
+
 const prompt = promptLib()
 
 const breakItemsIntoArray = string => string.split(',')
@@ -14,33 +18,13 @@ const askUserList = () =>
 const getListToSort = () =>
     parseInformedList(askUserList())
 
-const getSmallestIndex = (list, actualIndex) => {
-    let smallestNumberIndex = actualIndex;
+const init = (sort, list) =>
+    console.log(sort(list))
 
-    for (let j = actualIndex ; j < list.length ; j++ ) {
-        smallestNumberIndex = (
-            list[j] < list[smallestNumberIndex]
-            ? j
-            : smallestNumberIndex
-        )
-    }
+const list = getListToSort()
 
-    return smallestNumberIndex
-}
+console.log('Functional')
+init(sortFunc, list)
 
-const selectionSort = list => {
-    for (let i = 0 ; i < list.length ; i++) {
-        const actualItem = list[i]
-        const smallestNumberIndex = getSmallestIndex(list, i)
-
-        list[i] = list[smallestNumberIndex]
-        list[smallestNumberIndex] = actualItem
-    }
-
-    return list
-}
-
-const init = () =>
-    console.log(selectionSort(getListToSort()))
-
-init()
+console.log('Loop')
+init(sortLoop, list)
